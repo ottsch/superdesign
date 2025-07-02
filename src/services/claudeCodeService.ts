@@ -38,24 +38,17 @@ export class ClaudeCodeService {
             // Setup working directory first
             await this.setupWorkingDirectory();
 
-            // Check if API key is configured
+            // Check if API key is configured (optional)
             const config = vscode.workspace.getConfiguration('superdesign');
             const apiKey = config.get<string>('anthropicApiKey');
             
-            if (!apiKey) {
-                Logger.warn('No API key found');
-                const action = await vscode.window.showErrorMessage(
-                    'Anthropic API key is required for Claude Code integration.',
-                    'Open Settings'
-                );
-                if (action === 'Open Settings') {
-                    vscode.commands.executeCommand('workbench.action.openSettings', 'superdesign.anthropicApiKey');
-                }
-                throw new Error('Missing API key');
+            if (apiKey) {
+                // Set the environment variable for Claude Code SDK if provided
+                process.env.ANTHROPIC_API_KEY = apiKey;
+                Logger.info('Using configured API key for authentication');
+            } else {
+                Logger.info('No API key configured, falling back to Claude Code subscription authentication');
             }
-
-            // Set the environment variable for Claude Code SDK
-            process.env.ANTHROPIC_API_KEY = apiKey;
 
             // Dynamically import Claude Code SDK
             Logger.info('Importing Claude Code SDK...');
